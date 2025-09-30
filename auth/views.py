@@ -6,7 +6,7 @@ from accounts.serializers import UserSerializer
 from rest_framework.response import Response
 from core.exceptions import ValidationError
 from rest_framework.views import APIView
-from accounts.auth import AuthenticationService
+from .services import AuthenticationService
 from django.utils.timezone import now
 from rest_framework import status
 

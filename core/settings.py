@@ -56,7 +56,7 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt",
     "rest_framework_simplejwt.token_blacklist",
     "rest_framework",
-    "auth",
+    "auth.apps.AuthConfig",
     "accounts",
 ]
 
@@ -71,6 +71,8 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = "core.urls"
+
+AUTH_USER_MODEL = 'accounts.User'
 
 TEMPLATES = [
     {
@@ -128,9 +130,6 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-# Habilitar após o app de accounts ser criado
-# https://docs.djangoproject.com/en/5.2/topics/auth/customizing/#substituting
-AUTH_USER_MODEL = 'accounts.User'
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
