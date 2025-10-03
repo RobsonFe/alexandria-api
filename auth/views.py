@@ -7,7 +7,6 @@ from rest_framework.response import Response
 from auth.validations.validation import SiginValidationMixin
 from rest_framework.views import APIView
 from .service.services import AuthenticationService
-from django.utils.timezone import now
 from rest_framework import status
 
 class SignInView(SiginValidationMixin,APIView):

@@ -1,80 +1,34 @@
-from rest_framework.exceptions import AuthenticationFailed
-from django.core.files.storage import FileSystemStorage
-from accounts.serializers import UserSerializer
+from accounts.serializers import UserSerializer, UserUpdateSerializer
 from rest_framework.response import Response
-from core.exceptions import ValidationError
+from accounts.service.service import UserService
+from accounts.validations.validation import UserValidatorMixin
 from rest_framework.views import APIView
 from rest_framework import status
-from accounts.models import User
-from django.conf import settings
-import uuid
-import os
+from rest_framework.permissions import IsAuthenticated
 
-class UserView(APIView):
+class UserView(UserValidatorMixin, APIView):
+    permission_classes = [IsAuthenticated]
+    service_class = UserService
 
     def get(self, request):
         user = request.user
-
-        User.objects.filter(id=user.id)
-
-        if not user:
-            raise AuthenticationFailed(
-                "Usuário não autenticado.", code=status.HTTP_401_UNAUTHORIZED
-            )
-
-        user_data = UserSerializer(user).data
-
-        return Response({"result": user_data}, status=status.HTTP_200_OK)
+        self.ensure_authenticated(user)
+        data = UserSerializer(user).data
+        return Response({"result": data}, status=status.HTTP_200_OK)
 
     def patch(self, request):
         user = request.user
+        self.ensure_authenticated(user)
 
-        if not user:
-            raise AuthenticationFailed(
-                "Usuário não autenticado.", code=status.HTTP_401_UNAUTHORIZED
-            )
+        serializer = UserUpdateSerializer(user, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
 
-        name = request.data.get("name", user.name)
-        email = request.data.get("email", user.email)
-        password = request.data.get("password")
         avatar = request.FILES.get("avatar")
-
-        user.name = name
-        user.email = email
-        
-        if password:
-            user.set_password(password)
-
-        storage = FileSystemStorage(
-            location=os.path.join(settings.MEDIA_ROOT, 'avatars'),
-            base_url=f"{settings.MEDIA_URL}avatars/"
-        )
-
+        self.validate_avatar_file(avatar)
         if avatar:
-            content_type = avatar.content_type
-            extension = avatar.name.split(".")[-1]
-            if content_type not in ["image/jpeg", "image/png"]:
-                raise ValidationError(
-                    "Formato de imagem inválido. Use JPEG ou PNG.",
-                    code=status.HTTP_400_BAD_REQUEST,
-                )
-            if extension not in ["jpg", "jpeg", "png"]:
-                raise ValidationError(
-                    "Extensão de imagem inválida. Use .jpg, .jpeg ou .png.",
-                    code=status.HTTP_400_BAD_REQUEST,
-                )
-            
-            if user.avatar and user.avatar != "/media/avatars/default.png":
-                old_file_path = user.avatar.replace(settings.MEDIA_URL, "")
-                if storage.exists(old_file_path):
-                    storage.delete(old_file_path)
-            
-            filename = f"{uuid.uuid4()}.{extension}"
-            file_path = storage.save(filename, avatar)
-            user.avatar = storage.url(file_path)
+            service = self.service_class()
+            user = service.update_avatar(user, avatar)
+            user.save(update_fields=["avatar"])
 
-        user.save()
-
-        user_data = UserSerializer(user).data
-
-        return Response({"result": user_data}, status=status.HTTP_200_OK)
+        return Response({"result": UserSerializer(user).data}, status=status.HTTP_200_OK)
