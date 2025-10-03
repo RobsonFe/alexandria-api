@@ -7,10 +7,13 @@ class AuthenticationService:
     Serviço responsável pela autenticação de usuários
     """
     
-    def signin(self, email, password):
+    def signin(self, data):
         """
         Realiza o login do usuário
         """
+        email = data.get("email")
+        password = data.get("password")
+        
         try:
             user = User.objects.get(email=email)
             if check_password(password, user.password):
@@ -19,10 +22,15 @@ class AuthenticationService:
         except User.DoesNotExist:
             return None
     
-    def signup(self, name, email, password):
+    def signup(self, data):
         """
         Realiza o cadastro do usuário
         """
+        
+        name = data.get("name")
+        email = data.get("email")
+        password = data.get("password")
+        
         try:
             if User.objects.filter(email=email).exists():
                 return None

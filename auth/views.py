@@ -4,34 +4,31 @@ from rest_framework_simplejwt.exceptions import TokenError
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from accounts.serializers import UserSerializer
 from rest_framework.response import Response
+from auth.validations.validation import SiginValidationMixin
 from core.exceptions import ValidationError
 from rest_framework.views import APIView
-from .services import AuthenticationService
+from .service.services import AuthenticationService
 from django.utils.timezone import now
 from rest_framework import status
 
-class SignInView(APIView):
+class SignInView(SiginValidationMixin,APIView):
 
     permission_classes = [AllowAny]
+    
+    def __init__(self, service=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.service = service or AuthenticationService()
 
     def post(self, request):
-        email = request.data.get("email")
-        password = request.data.get("password")
-
-        auth_service = AuthenticationService()
-        signin = auth_service.signin(email, password)
-
-        if not signin:
-            raise AuthenticationFailed(
-                "Credenciais inválidas.", code=status.HTTP_401_UNAUTHORIZED
-            )
-
-        user = UserSerializer(signin).data
         
-        if not user:
-            raise AuthenticationFailed(
-                "Erro na autenticação.", code=status.HTTP_400_BAD_REQUEST
-            )
+        data = request.data
+
+        is_valid, error_response = self.validate_sigin(data)
+        
+        if not is_valid:
+            raise error_response
+        
+        signin = self.service.signin(data)
             
         refresh = RefreshToken.for_user(signin)
 
@@ -44,28 +41,23 @@ class SignInView(APIView):
         )
 
 
-class SignUpView(APIView):
+class SignUpView(SiginValidationMixin,APIView):
 
     permission_classes = [AllowAny]
+    
+    def __init__(self, service=None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.service = service or AuthenticationService()
 
     def post(self, request):
 
-        name = request.data.get("name")
-        email = request.data.get("email")
-        password = request.data.get("password")
+        data = request.data
 
-        if not name or not email or not password:
-            raise ValidationError(
-                "Todos os campos são obrigatórios.", code=status.HTTP_400_BAD_REQUEST
-            )
-
-        auth_service = AuthenticationService()
-        singup = auth_service.signup(name, email, password)
-
-        if not singup:
-            raise AuthenticationFailed(
-                "Erro ao registrar.", code=status.HTTP_400_BAD_REQUEST
-            )
+        is_valid, error_response = self.validate_signup(data)
+        if not is_valid:
+            raise error_response
+        
+        singup = self.service.signup(data)
 
         user = UserSerializer(singup).data
         refresh = RefreshToken.for_user(singup)
