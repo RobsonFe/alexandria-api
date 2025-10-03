@@ -1,5 +1,6 @@
 from django.contrib.auth.hashers import check_password
 from accounts.models import User
+from core.exceptions import ValidationError
 
 
 class AuthenticationService:
@@ -23,23 +24,19 @@ class AuthenticationService:
             return None
     
     def signup(self, data):
-        """
-        Realiza o cadastro do usuário
-        """
-        
+        """Realiza o cadastro do usuário ou lança ValidationError."""
         name = data.get("name")
         email = data.get("email")
         password = data.get("password")
-        
+
+        if User.objects.filter(email=email).exists():
+            raise ValidationError("E-mail já cadastrado.")
         try:
-            if User.objects.filter(email=email).exists():
-                return None
-            
             user = User.objects.create_user(
                 name=name,
                 email=email,
-                password=password
+                password=password,
             )
             return user
         except Exception:
-            return None
+            raise ValidationError("Erro ao criar usuário. Tente novamente mais tarde.")

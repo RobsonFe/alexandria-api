@@ -44,13 +44,7 @@ class SignUpView(SiginValidationMixin, APIView):
     def post(self, request):
         data = request.data
         self.validate_signup(data) 
-
         signup_user = self.service.signup(data)
-        if not signup_user:
-            raise AuthenticationFailed(
-                "Não foi possível cadastrar (email já existe ou dados inválidos).",
-                code=status.HTTP_400_BAD_REQUEST,
-            )
         user_data = UserSerializer(signup_user).data
         refresh = RefreshToken.for_user(signup_user)
         return Response(
