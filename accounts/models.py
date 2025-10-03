@@ -24,24 +24,24 @@ class UserManager(BaseUserManager):
         return user
 
 class User(AbstractBaseUser):
-  avatar = models.TextField(default="/media/avatars/default.png")
-  name = models.CharField(max_length=100)
-  email = models.EmailField(max_length=255, unique=True)
-  is_superuser = models.BooleanField(default=False)
-  
-  objects = UserManager()
-  
-  USERNAME_FIELD = 'email'
-  
-  def has_perm(self, perm, obj=None):
-      return True
-    
-  def has_module_perms(self, app_label):
-      return True
-  
-  @property
-  def is_staff(self):
-      return self.is_superuser
-    
-  class Meta:
-    db_table = 'users'
+    avatar = models.ImageField(upload_to='avatars/', default='avatars/default.png')
+    name = models.CharField(max_length=100)
+    email = models.EmailField(max_length=255, unique=True)
+    is_superuser = models.BooleanField(default=False)
+
+    objects = UserManager()
+
+    USERNAME_FIELD = 'email'
+
+    def has_perm(self, perm, obj=None):
+        return True
+
+    def has_module_perms(self, app_label):
+        return True
+
+    @property
+    def is_staff(self):
+        return self.is_superuser
+
+    class Meta:
+        db_table = 'users'

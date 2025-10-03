@@ -17,13 +17,12 @@ class UserService:
             base_url=f"{settings.MEDIA_URL}avatars/"
         )
 
-        if user.avatar and user.avatar not in ("/media/avatars/default.png", "avatars/default.png"):
-            old = user.avatar.replace(settings.MEDIA_URL, "") if user.avatar.startswith(settings.MEDIA_URL) else user.avatar.lstrip('/')
-            if storage.exists(old):
-                storage.delete(old)
+        if user.avatar and user.avatar.name != 'avatars/default.png':
+            if storage.exists(user.avatar.name.split('avatars/',1)[-1]):
+                storage.delete(user.avatar.name.split('avatars/',1)[-1])
 
         extension = avatar.name.rsplit('.', 1)[-1].lower()
         filename = f"{uuid.uuid4()}.{extension}"
         file_path = storage.save(filename, avatar) 
-        user.avatar = storage.base_url + os.path.basename(file_path)
+        user.avatar = f"avatars/{os.path.basename(file_path)}"
         return user
