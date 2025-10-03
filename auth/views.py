@@ -9,7 +9,7 @@ from rest_framework.views import APIView
 from .service.services import AuthenticationService
 from rest_framework import status
 
-class SignInView(SiginValidationMixin,APIView):
+class SignInView(SiginValidationMixin, APIView):
 
     permission_classes = [AllowAny]
     
@@ -18,28 +18,22 @@ class SignInView(SiginValidationMixin,APIView):
         self.service = service or AuthenticationService()
 
     def post(self, request):
-        
         data = request.data
+        self.validate_sigin(data) 
 
-        is_valid, error_response = self.validate_sigin(data)
-        
-        if not is_valid:
-            raise error_response
-        
-        signin = self.service.signin(data)
-            
-        refresh = RefreshToken.for_user(signin)
-
+        user = self.service.signin(data)
+        if not user:
+            raise AuthenticationFailed(
+                "Credenciais inválidas.", code=status.HTTP_401_UNAUTHORIZED
+            )
+        refresh = RefreshToken.for_user(user)
         return Response(
-            {
-                "access": str(refresh.access_token),
-                "refresh": str(refresh),
-            },
+            {"access": str(refresh.access_token), "refresh": str(refresh)},
             status=status.HTTP_200_OK,
         )
 
 
-class SignUpView(SiginValidationMixin,APIView):
+class SignUpView(SiginValidationMixin, APIView):
 
     permission_classes = [AllowAny]
     
@@ -48,22 +42,21 @@ class SignUpView(SiginValidationMixin,APIView):
         self.service = service or AuthenticationService()
 
     def post(self, request):
-
         data = request.data
+        self.validate_signup(data) 
 
-        is_valid, error_response = self.validate_signup(data)
-        if not is_valid:
-            raise error_response
-        
-        singup = self.service.signup(data)
-
-        user = UserSerializer(singup).data
-        refresh = RefreshToken.for_user(singup)
-
+        signup_user = self.service.signup(data)
+        if not signup_user:
+            raise AuthenticationFailed(
+                "Não foi possível cadastrar (email já existe ou dados inválidos).",
+                code=status.HTTP_400_BAD_REQUEST,
+            )
+        user_data = UserSerializer(signup_user).data
+        refresh = RefreshToken.for_user(signup_user)
         return Response(
             {
                 "result": {
-                    "user": user,
+                    "user": user_data,
                     "access": str(refresh.access_token),
                     "refresh": str(refresh),
                 }
