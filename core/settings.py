@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "auth.apps.AuthConfig",
     "accounts",
+    "books",
 ]
 
 MIDDLEWARE = [
@@ -107,7 +108,8 @@ DATABASES = {
         "OPTIONS": {
             "connect_timeout": 10,
         },
-        "ATOMIC_REQUESTS": True, # Essa configuração faz com que cada requisição seja tratada como uma transação e se der erro, faz rollback automático.
+        # Essa configuração faz com que cada requisição seja tratada como uma transação e se der erro, faz rollback automático.
+        "ATOMIC_REQUESTS": True,
     },
 }
 
