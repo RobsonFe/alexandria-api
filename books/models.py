@@ -29,7 +29,7 @@ class Book(models.Model):
     price = models.DecimalField(
         max_digits=10, decimal_places=2, null=True, blank=True, help_text="Preço do livro")
     is_active = models.BooleanField(
-        default=True, null=True, blank=True, help_text="Status do livro")
+        default=True, help_text="Status do livro")
     image_book = models.ImageField(
         upload_to='books/', null=True, blank=True, help_text='Imagem do livro')
     created_at = models.DateTimeField(
