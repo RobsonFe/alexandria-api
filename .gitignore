@@ -3,7 +3,18 @@
 *.pyc
 __pycache__/
 local_settings.py
-media
+# Configuração de mídia - permitir estrutura de pastas mas controlar conteúdo
+media/
+!media/avatars/
+!media/books/
+!media/avatars/default.png
+# Ignorar todas as outras imagens de avatars (exceto default.png)
+media/avatars/*.jpg
+media/avatars/*.jpeg
+media/avatars/*.png
+!media/avatars/default.png
+# Ignorar todas as imagens de books
+media/books/*
 .env
 .venv
 env/
